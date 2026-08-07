@@ -1,7 +1,7 @@
 ---
 status: Active
 maintainer: pacoxu
-last_updated: 2026-07-10
+last_updated: 2026-07-31
 tags: kubernetes, ai-infrastructure, scheduling, resource-management, topology-aware-scheduling
 canonical_path: docs/kubernetes/README.md
 ---
@@ -34,8 +34,8 @@ workload isolation.
 
 - **[Scheduling Optimization](./scheduling-optimization.md)**: Comprehensive
   guide covering high-throughput scheduling, multi-scheduler patterns,
-  gang scheduling, topology-aware scheduling, load balancing, and
-  descheduling strategies
+  native workload-aware scheduling, gang scheduling, topology-aware
+  scheduling, load balancing, and descheduling strategies
 - **[TAS Validation Report](./tas-validation.md)**: Topology-aware scheduling
   validation plan, A/B experiment checklist, strategy matrix, and next-stage
   decision gates for AI workloads
