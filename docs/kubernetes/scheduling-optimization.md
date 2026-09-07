@@ -1,7 +1,7 @@
 ---
 status: Active
 maintainer: pacoxu
-last_updated: 2026-07-31
+last_updated: 2026-08-25
 tags: kubernetes, scheduling, optimization, large-scale
 canonical_path: docs/kubernetes/scheduling-optimization.md
 ---
@@ -397,7 +397,9 @@ topology or queue policy should govern it?"
   introduced the alpha Workload API and native gang scheduling. Kubernetes
   v1.36 advanced this work with a dedicated PodGroup scheduling cycle,
   topology-aware placement, workload-aware preemption, and Job controller
-  integration. These features remain alpha and are disabled by default.
+  integration. In v1.37, the Workload/PodGroup core, gang scheduling, and
+  workload-aware preemption reach Beta; advanced topology and Job integration
+  remain Alpha. These paths are still disabled by default.
 - <a href="https://github.com/volcano-sh/volcano">`Volcano`</a>: Production
   scheduling platform centered on `PodGroup`, queueing, fairness, preemption,
   reclaim, and topology-aware placement for batch and AI clusters.
@@ -409,7 +411,10 @@ topology or queue policy should govern it?"
   admission control and queueing, commonly paired with a scheduler that
   performs placement.
 - <a href="https://github.com/kubernetes-sigs/lws">`LeaderWorkerSet (LWS)`</a>:
-  Kubernetes SIG workload abstraction for leader-worker applications.
+  Kubernetes SIG workload abstraction for leader-worker applications. See the
+  [LWS high-priority KEP learning path](./lws-keps-learning-path.md) for
+  subgroup, startup ordering, per-replica gang, resizing, and multi-role
+  orchestration semantics.
 
 **How to interpret the major routes:**
 
@@ -422,7 +427,8 @@ topology or queue policy should govern it?"
 **Why this distinction matters:**
 
 - Native Kubernetes defines how workload semantics become part of the default
-  scheduler, but its current APIs are alpha.
+  scheduler. Its v1.37 core APIs are Beta but opt-in, while several topology,
+  hierarchy, and controller-integration APIs remain Alpha.
 - `Volcano` combines gang placement with production queue and fairness policy.
 - `Grove` is an inference orchestration layer, not a drop-in scheduler; it
   relies on a scheduling backend such as KAI Scheduler for placement.
@@ -452,6 +458,34 @@ spec:
 - Choose the scheduling layer deliberately: evaluate native Kubernetes for
   upstream convergence, use `Volcano` for integrated queue and fairness
   control, and use `Grove + KAI` for inference-system orchestration
+
+#### Native Workload-Aware Scheduling in Kubernetes v1.37
+
+Kubernetes v1.37 promotes the Workload and PodGroup core APIs, gang
+scheduling, and workload-aware preemption to Beta. The scheduler treats a
+PodGroup as a queueing and scheduling unit, verifies that at least `minCount`
+members fit, and then binds the group atomically. Mutable `minCount` provides a
+foundation for elastic gangs.
+
+This path remains opt-in: `GenericWorkload` is Beta but disabled by default.
+The older `GangScheduling` and `WorkloadAwarePreemption` gates are folded into
+`GenericWorkload`. Clusters that tested v1.36 must also migrate away from the
+removed `scheduling.k8s.io/v1alpha2` API before upgrading.
+
+The following related capabilities have different maturity levels:
+
+- `DRAWorkloadResourceClaims` is Beta and lets a PodGroup share one
+  ResourceClaim across its Pods.
+- `TopologyAwareWorkloadScheduling`, `CompositePodGroup`, and
+  `WorkloadWithJob` remain Alpha and disabled by default.
+- JobSet, LeaderWorkerSet, RayJob, Kueue, and other external controllers do not
+  gain automatic integration merely because the core APIs reached Beta.
+
+Use [the v1.37 DRA and WAS release notes](./sig-release/v1.37/release.md) for
+the component-level feature-gate matrix and rollout checklist. If Kueue,
+Volcano, or another batch scheduler is already installed, assign clear owners
+for admission/quota, gang semantics, node placement, and device allocation so
+two systems do not control the same decision layer.
 
 ### 2.6 Topology-Aware Scheduling
 
@@ -961,6 +995,7 @@ SLA-based scheduling complements other optimization strategies:
   Preemption](https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/)
 - [Dynamic Resource Allocation
   (DRA)](./dra.md)
+- [LWS High-Priority KEP Learning Path](./lws-keps-learning-path.md)
 
 ## RoadMap (Ongoing Proposals)
 

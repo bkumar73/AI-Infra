@@ -1,7 +1,7 @@
 ---
 status: Active
 maintainer: pacoxu
-last_updated: 2026-07-09
+last_updated: 2026-08-25
 tags: ai-agents, agentic-workflow, kubernetes, mcp, agent-platforms
 canonical_path: agent-infra/README.md
 ---
@@ -242,6 +242,44 @@ running AI agents with strong isolation guarantees.
 
 See also: [Agent Sandbox Documentation](../docs/kubernetes/isolation.md#6-agent-sandbox-kubernetes-sig-project)
 
+### K8E
+
+<a href="https://github.com/xiaods/k8e">`xiaods/k8e`</a>
+
+K8E is a self-hosted agent sandbox distribution that packages a lightweight
+Kubernetes cluster, a sandbox gateway, warm-pool management, and runtime
+integration into a single binary. It spans several layers that are normally
+assembled separately: the cluster distribution, agent-facing sandbox
+operations, Kubernetes lifecycle management, network policy, and pluggable
+isolation runtimes.
+
+**Key Features:**
+
+- Single-binary installation for a Kubernetes-based sandbox cluster
+- Warm pools for low-latency session allocation
+- gVisor, Kata Containers, and Firecracker runtime integration
+- Per-session Cilium eBPF egress policy and resource governance
+- CLI and E2B-compatible API surfaces for session, command, file, terminal,
+  and snapshot operations
+- Compatibility with `kubernetes-sigs/agent-sandbox`
+
+**Status**: Active Apache-2.0 project. The integrated agent-sandbox surface is
+evolving quickly; validate its security model, runtime compatibility, upgrade
+path, and performance against your own production requirements.
+
+**Use Cases:**
+
+- Teams that want a self-contained Kubernetes sandbox appliance instead of
+  assembling the cluster, gateway, warm pool, networking, and runtimes
+  independently
+- Private agent execution clusters with multiple isolation profiles
+- Coding-agent or tool-execution services that need ephemeral workspaces,
+  audited operations, and fast session claims
+
+K8E should not be compared one-for-one with a single CRD controller or a
+single isolation runtime. It is an integrated distribution that composes both
+layers and can consume `kubernetes-sigs/agent-sandbox` APIs.
+
 ### Agent Substrate
 
 <a href="https://github.com/agent-substrate/substrate">`agent-substrate/substrate`</a>
@@ -391,7 +429,7 @@ APIs around existing CRDs/runtime backends, but watch `pods/dynamic` because it
 could eventually collapse some custom fast-start paths back into core
 Kubernetes.
 
-#### Agent Sandbox Selection Update (2026-07-09)
+#### Agent Sandbox Selection Update (2026-08-25)
 
 Recent agent sandbox projects should be compared by layer, not as direct
 one-for-one replacements. A practical platform usually combines an
@@ -402,6 +440,7 @@ runtimes:
 | ----- | ------------------ | ------------ | --------------- |
 | Agent-facing sandbox platform | [OpenSandbox](https://github.com/alibaba/OpenSandbox), [CubeSandbox](https://github.com/TencentCloud/CubeSandbox), [E2B](https://github.com/e2b-dev/e2b), [Daytona](https://github.com/daytonaio/daytona), [Sandbox0](https://github.com/sandbox0-ai/sandbox0) | SDK/API, sandbox lifecycle, command/file/browser execution, templates | Use OpenSandbox as the broad self-hosted default; evaluate CubeSandbox for high-density E2B-compatible microVM pools; check Daytona's AGPLv3 impact before embedding. |
 | Kubernetes lifecycle API | [kubernetes-sigs/agent-sandbox](https://github.com/kubernetes-sigs/agent-sandbox), [agent-sandbox/agent-sandbox](https://github.com/agent-sandbox/agent-sandbox), [volcano-sh/agentcube](https://github.com/volcano-sh/agentcube) | CRD/controller, warm pools, stable sandbox identity, scheduling hooks | `kubernetes-sigs/agent-sandbox` is the neutral K8s API layer; `agent-sandbox/agent-sandbox` adds REST/MCP and E2B compatibility; AgentCube is still proposal/early design. |
+| Integrated Kubernetes sandbox distribution | [K8E](https://github.com/xiaods/k8e) | Single-binary cluster, sandbox gateway, warm pools, network policy, and runtime integration | Evaluate when a self-contained sandbox appliance is preferable to assembling each layer. Treat its sub-500ms warm-pool claim and other performance figures as project-reported until reproduced in your environment. |
 | Agent runtime substrate | [agent-substrate/substrate](https://github.com/agent-substrate/substrate) | Invocation routing, worker pools, agent actor lifecycle, suspend/resume | Use when agent fleets are mostly idle and dedicated pods would waste resources; pair it with Agent Sandbox or runtime sandboxing for the isolation boundary. |
 | Isolation runtime | [gVisor](https://github.com/google/gvisor), [Kata Containers](https://github.com/kata-containers/kata-containers), [containerd/nerdbox](https://github.com/containerd/nerdbox), [Firecracker](https://github.com/firecracker-microvm/firecracker), [Kuasar](https://github.com/kuasar-io/kuasar) | Runtime boundary for untrusted code | Start with gVisor for density and operational simplicity; use Kata for VM-level tenant boundaries and GPU paths; treat Firecracker as a low-level primitive unless the team owns the control plane. |
 | Local coding-agent sandbox | [Cleanroom](https://github.com/buildkite/cleanroom), [Brood Box](https://github.com/stacklok/brood-box), [microsandbox](https://github.com/superradcompany/microsandbox), [BoxLite](https://github.com/boxlite-ai/boxlite), [Matchlock](https://github.com/jingkaihe/matchlock), [Shuru](https://github.com/superhq-ai/shuru), [sandbox-runtime](https://github.com/anthropic-experimental/sandbox-runtime) | Developer-machine isolation, repo policy, credential proxy, diff review | Prefer Cleanroom/Brood Box when the threat model is coding-agent access to a repo; use microsandbox/BoxLite for embeddable local microVM APIs; use sandbox-runtime for OS policy guardrails without VM isolation. |
@@ -431,6 +470,12 @@ Default stack recommendation:
 5. **High-risk runtime**: Kata or CubeSandbox for stronger microVM boundaries.
 6. **Local development**: Cleanroom or Brood Box for repo-scoped egress,
    host-side credentials, and post-run change review.
+
+Integrated alternative: evaluate K8E when the operational goal is a dedicated,
+self-hosted sandbox cluster with the gateway, warm pool, Cilium policy, and
+runtime wiring supplied together. Keep the same workload-level threat-model
+review; packaging the layers together does not by itself prove the isolation
+boundary or production SLOs.
 
 ## Agent Development Frameworks
 

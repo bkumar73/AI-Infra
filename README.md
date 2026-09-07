@@ -1,7 +1,7 @@
 ---
 status: Active
 maintainer: pacoxu
-last_updated: 2026-07-09
+last_updated: 2026-08-25
 tags: ai-infrastructure, kubernetes, learning-path, landscape
 ---
 
@@ -34,6 +34,7 @@ where to focus their learning.
 ## 📑 Table of Contents
 
 - [AI-Infra Landscape](#-ai-infra-landscape-2026-march)
+- [AI Infra Definition](#-ai-infra-definition)
 - [Learning Path for AI Infra Engineers](#-learning-path-for-ai-infra-engineers)
   - [0. Kernel & Runtime (底层内核)](#-0-kernel--runtime-底层内核)
   - [1. Scheduling & Workloads (调度与工作负载)](#-1-scheduling--workloads-调度与工作负载)
@@ -47,6 +48,22 @@ where to focus their learning.
 - [References](#-references)
 - [Conferences](#conferences)
 - [License](#-license)
+
+## 🧩 AI Infra Definition
+
+This repository uses the following long-term boundary for AI Infrastructure:
+
+1. **Training**: distributed training system design and execution
+   (`DP`/`TP`/`EP`/`SP`/`PP`), plus scheduling, runtime, and reliability.
+2. **Inference (P/D)**: serving stack for prefill/decode workloads, including
+   `KVCache`, PD disaggregation, model routing, and efficiency optimization.
+3. **RL (training-serving consistency)**: policy loop, online/offline
+   efficiency, and agentic workflow integration between training and inference.
+
+Reference figure:
+
+<img width="900" alt="AI infra software stack definition"
+src="https://github.com/user-attachments/assets/dcdb9f6a-c554-4878-b4b6-1be294981220" />
 
 ### 📂 Documentation Files
 
@@ -274,6 +291,9 @@ can perceive, reason, and act.
       collaborative AI with federated learning
     - [`Kubernetes SIG Agent Sandbox`](https://github.com/kubernetes-sigs/agent-sandbox):
       Secure sandbox for AI agents
+    - [`K8E`](https://github.com/xiaods/k8e): Self-hosted, single-binary
+      Kubernetes sandbox distribution with warm pools and pluggable gVisor,
+      Kata Containers, or Firecracker isolation
     - [`Agent Substrate`](https://github.com/agent-substrate/substrate):
       Core system and high-density Kubernetes runtime for stateful agent actors with
       suspend/resume and real-time routing
@@ -440,8 +460,14 @@ We welcome contributions to improve this landscape and path! Whether it's a new 
 
 - [CNCF Landscape](https://landscape.cncf.io/)
 - [Awesome LLMOps](https://awesome-llmops.inftyai.com/)
+- [Open Infra Index](https://github.com/deepseek-ai/open-infra-index)
+- [InfraTech](https://github.com/CalvinXKY/InfraTech)
 - [AI Infra Learning](https://github.com/cr7258/ai-infra-learning)
 - [AI Infra Learning Docs](https://github.com/ai-infra-learning/docs)
+- [Awesome AI Infrastructures](https://github.com/1duo/awesome-ai-infrastructures)
+- [AI Infra Landscape](https://github.com/tensorchord/ai-infra-landscape)
+- [Awesome LLMOps (GitHub)](https://github.com/InftyAI/Awesome-LLMOps)
+- [AI Fundermentals](https://github.com/ForceInjection/AI-fundermentals)
 - [CNCF TAG Workloads Foundation](https://github.com/cncf/toc/blob/main/tags/tag-workloads-foundation/README.md)
 - [CNCF TAG Infrastructure](https://github.com/cncf/toc/blob/main/tags/tag-infrastructure/README.md)
 - [CNCF AI Initiative](https://github.com/cncf/toc/issues?q=is%3Aissue%20state%3Aopen%20label%3Akind%2Finitiative)

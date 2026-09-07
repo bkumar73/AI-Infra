@@ -1,8 +1,8 @@
 ---
 status: Active
 maintainer: pacoxu
-last_updated: 2025-10-29
-tags: inference, caching, kv-cache, prefix-caching, llm-optimization
+last_updated: 2026-09-02
+tags: inference, caching, kv-cache, prefix-caching, kvcr, llm-optimization
 canonical_path: docs/inference/caching.md
 ---
 
@@ -266,7 +266,27 @@ management within the Dynamo ecosystem.
 - Efficient memory utilization
 
 For architecture details, see the
-[KVBM Architecture Documentation](https://github.com/ai-dynamo/dynamo/blob/main/docs/architecture/kvbm_architecture.md).
+[KVBM README](https://github.com/ai-dynamo/dynamo/blob/main/lib/bindings/kvbm/README.md).
+
+### KV Cache Runner (KVCR)
+
+[`KV Cache Runner (KVCR)`](https://github.com/ai-dynamo/kvcr) treats KV cache as
+a distributed resource spanning memory and storage tiers. A KV-aware router
+maintains the global cache inventory and sends source hints, while each KVCR
+instance manages local residency, policy, and data movement.
+
+**Key Features:**
+
+- Router-guided cache reuse, load balancing, and prefetching
+- Pluggable admission, eviction, placement, and staging policies
+- Cross-tier and peer-to-peer movement through NIXL
+- Optional `KVCR-Guard` for preserving KVCR-owned host memory across engine
+  failures
+- Framework- and router-agnostic integration model
+
+KVCR is under active development and is not yet recommended for production
+use. Treat it as an emerging design alongside Dynamo KVBM, not as a proven
+drop-in replacement.
 
 ### Host Memory Caching
 
@@ -421,7 +441,7 @@ LMCache, and Mooncake.
 
 <!-- markdownlint-disable MD013 -->
 | Feature | NIXL | LMCache | Mooncake |
-|---------|------|---------|----------|
+| --------- | ------ | --------- | ---------- |
 | **Project Type** | Shared prefix caching | Independent prefix caching | Distributed KV cache service |
 | **Primary Use Case** | Cross-request prefix sharing | Long-context TTFT reduction | Distributed storage management |
 | **Caching Scope** | Shared across requests/users | Per-session/service | Cluster-wide distributed |
@@ -485,7 +505,9 @@ Implementation details can be found in the
 - [NIXL GitHub Repository](https://github.com/ai-dynamo/nixl)
 - [LMCache GitHub Repository](https://github.com/LMCache/lmcache)
 - [Mooncake GitHub Repository](https://github.com/kvcache-ai/Mooncake)
-- [Dynamo KVBM Architecture](https://github.com/ai-dynamo/dynamo/blob/main/docs/architecture/kvbm_architecture.md)
+- [Dynamo KVBM README](https://github.com/ai-dynamo/dynamo/blob/main/lib/bindings/kvbm/README.md)
+- [KVCR GitHub Repository](https://github.com/ai-dynamo/kvcr)
+- [KVCR Design Overview](https://github.com/ai-dynamo/kvcr/blob/main/docs/design_overview.md)
 - [SGlang Memory Cache Storage](https://github.com/sgl-project/sglang/tree/9b5f0f64f52033f5965d5b593df5df45c9be8c24/python/sglang/srt/mem_cache/storage)
 - [llm-d Routing Sidecar](https://github.com/llm-d/llm-d-routing-sidecar)
 - [Red Hat DCN Documentation](https://docs.redhat.com/en/documentation/red_hat_openstack_platform/17.1/html/deploying_a_distributed_compute_node_dcn_architecture/understanding_dcn)

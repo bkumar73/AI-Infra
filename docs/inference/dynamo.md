@@ -1,8 +1,8 @@
 ---
 status: Active
 maintainer: pacoxu
-last_updated: 2026-07-16
-tags: inference, dynamo, architecture, kv-cache, routing, grove, nixl, modelexpress, model-streamer, ai-dynamo
+last_updated: 2026-09-02
+tags: inference, dynamo, architecture, kv-cache, routing, grove, nixl, kvcr, modelexpress, model-streamer, ai-dynamo
 canonical_path: docs/inference/dynamo.md
 ---
 
@@ -179,7 +179,7 @@ flowchart TB
 ## End-To-End Request Flow
 
 The official
-[dynamo-flow.md](https://github.com/ai-dynamo/dynamo/blob/main/docs/design-docs/dynamo-flow.md)
+[Dynamo flow diagram](https://github.com/ai-dynamo/dynamo/blob/main/docs/fern/assets/img/dynamo-flow.png)
 adds the dynamic view that the panorama alone does not show: how a single
 disaggregated request moves through the system.
 
@@ -280,7 +280,7 @@ guardrails.
 ## KVBM: The Center Of Dynamo's State Plane
 
 The official
-[KVBM design doc](https://github.com/ai-dynamo/dynamo/blob/main/docs/design-docs/kvbm-design.md)
+[KVBM README](https://github.com/ai-dynamo/dynamo/blob/main/lib/bindings/kvbm/README.md)
 makes it clear that KVBM is not just a cache container. It is the state-plane
 orchestration layer that tracks block lifecycle, memory tier placement, and
 cross-node movement.
@@ -324,10 +324,31 @@ KV visibility and transfer portable:
 That is the architectural reason NIXL sits next to KVBM in the panorama rather
 than under the engine layer.
 
+## KVCR: An Emerging Router-Hinted KV Runtime
+
+[`KV Cache Runner (KVCR)`](https://github.com/ai-dynamo/kvcr) explores a newer
+cache-management boundary. The KV-aware router retains the global cache
+inventory and routing view, while each KVCR instance manages its local DRAM,
+SSD, and configured object-storage residency.
+
+KVCR uses router hints to find reusable cache data, applies pluggable admission,
+eviction, placement, and staging policies, and delegates local or peer-to-peer
+movement to NIXL. The optional `KVCR-Guard` process can preserve KVCR-owned DRAM
+after an engine failure and make the committed cache available during restart.
+
+KVCR is designed to be framework- and router-agnostic. Its published integration
+work includes TensorRT-LLM, vLLM, SGLang, Dynamo KV Router, `sgl-router`, and
+`llm-d` routing paths. The repository is still under active development, may
+introduce breaking changes, and is not yet recommended for production use.
+
+KVBM and KVCR therefore belong to the same broad state-plane discussion, but
+should currently be evaluated as distinct, evolving components rather than
+assuming that one is a drop-in replacement for the other.
+
 ## Discovery Plane: How Components Find Workers
 
 The official
-[discovery-plane.svg](https://github.com/ai-dynamo/dynamo/blob/main/docs/assets/img/discovery-plane.svg)
+[discovery-plane.svg](https://github.com/ai-dynamo/dynamo/blob/main/docs/fern/assets/img/discovery-plane.svg)
 shows a simple but important split:
 
 - **components** such as `Frontend`, `Router`, and `Planner` need to
@@ -429,6 +450,10 @@ broader inference and post-training platform.
   startup latency, and
   [FlexTensor](https://github.com/ai-dynamo/flextensor) extends model fit by
   streaming tensors between host and GPU memory.
+- **KV cache runtime**:
+  [KVCR](https://github.com/ai-dynamo/kvcr) combines router-provided cache hints,
+  pluggable cache policies, resilient host-memory ownership, and NIXL-backed
+  tier or peer transfers.
 - **Non-LLM coverage**:
   [AITune](https://github.com/ai-dynamo/aitune) expands Dynamo toward generic
   PyTorch inference, especially for bespoke non-LLM models.
@@ -438,7 +463,8 @@ broader inference and post-training platform.
 - Dynamo is a **system layer** for distributed inference, not a standalone
   replacement for model engines.
 - Its most distinctive capabilities sit in the **request plane**, the
-  **state plane** around KVBM and NIXL, and the **control plane** around
+  **state plane** around KVBM, emerging KVCR work, and NIXL, and the
+  **control plane** around
   Planner, Operator, and Grove.
 - The surrounding `ai-dynamo` projects extend Dynamo in three directions:
   **planning**, **Kubernetes orchestration**, and **memory / weight movement**.
@@ -446,8 +472,10 @@ broader inference and post-training platform.
 ## References
 
 - [ai-dynamo/dynamo](https://github.com/ai-dynamo/dynamo)
-- [Dynamo KVBM Design](https://github.com/ai-dynamo/dynamo/blob/main/docs/design-docs/kvbm-design.md)
-- [Dynamo Discovery Plane SVG](https://github.com/ai-dynamo/dynamo/blob/main/docs/assets/img/discovery-plane.svg)
+- [Dynamo KVBM README](https://github.com/ai-dynamo/dynamo/blob/main/lib/bindings/kvbm/README.md)
+- [ai-dynamo/kvcr](https://github.com/ai-dynamo/kvcr)
+- [KVCR Design Overview](https://github.com/ai-dynamo/kvcr/blob/main/docs/design_overview.md)
+- [Dynamo Discovery Plane SVG](https://github.com/ai-dynamo/dynamo/blob/main/docs/fern/assets/img/discovery-plane.svg)
 - [Dynamo Issue #5506: H1 '26 roadmap](https://github.com/ai-dynamo/dynamo/issues/5506)
 - [Dynamo Issue #9208: Toward Dynamo 2.0](https://github.com/ai-dynamo/dynamo/issues/9208)
 - [ai-dynamo/grove](https://github.com/ai-dynamo/grove)

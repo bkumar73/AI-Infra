@@ -1,7 +1,7 @@
 ---
 status: Active
 maintainer: pacoxu
-last_updated: 2026-07-10
+last_updated: 2026-08-25
 tags: kubernetes, dra, resource-allocation, device-management, topology
 canonical_path: docs/kubernetes/dra.md
 ---
@@ -52,7 +52,6 @@ lists:
 - **Operations feedback**: Health, topology, capacity, and claim status close
   the loop for debugging, autoscaling, and capacity planning.
 
-
 # NVIDIA GPU DRA
 
 Two DRA kubelet plugins: gpu-kubelet-plugin, compute-domain-kubelet-plugin are required.
@@ -65,7 +64,6 @@ Requirements:
 - Enable CDI in container runtime(containerd 2.0 enabled by default).
 - NVIDIA GPU Driver 565 or later. The GPU driver installation must include the nvidia-imex and nvidia-imex-ctl binaries.
 - installing GPU Operator v25.3.x or later.
-
 
 ![dra-driver](../../diagrams/dra-driver-architecture.png)
 
@@ -115,10 +113,12 @@ as a progression from "better API surface" to "real production control loop":
 | [v1.33 DRA updates](https://kubernetes.io/blog/2025/05/01/kubernetes-v1-33-dra-updates/) | DRA keeps maturing while still in beta; driver-owned claim status improves and new alpha work starts around prioritized alternatives, device taints, and admin access. | This is where DRA starts moving beyond "device count" and toward operator workflows and richer status. |
 | [v1.34 DRA gets even more powerful](https://kubernetes.io/blog/2025/09/01/kubernetes-v1-34-dra-updates/) | Core DRA reaches GA and adds stronger operational pieces such as AdminAccess, PodResources visibility, extended-resource migration, consumable capacity, binding conditions, and resource health. | This is the first release where production migration planning from Device Plugin to DRA becomes realistic. |
 | [v1.36: More Drivers, New Features, and the Next Era of DRA](https://kubernetes.io/blog/2026/05/07/kubernetes-v1-36-dra-136-updates/) | DRA expands across more drivers and adds workload-level claims, native resource experiments, better resource-pool visibility, deterministic selection, and discoverable device metadata. | The scope clearly broadens from GPUs into NICs, CPU, memory, and larger workload orchestration. |
+| [v1.37 AI Infra release notes](./sig-release/v1.37/release.md) | Extended Resources, device taints, and claim device status reach GA; workload-level claims and the shared/partitioned device path reach Beta. | DRA now has a practical legacy-workload migration path and a direct bridge into Workload-Aware Scheduling. |
 
 Read together with local AI-Infra notes:
 
-- [Kubernetes v1.36 DRA 的整体设计：从请求入口到调度、状态与拓扑](../blog/2026-04-23/2026-04-23-kubernetes-v1.36-dra-ai-infra_zh.md) - This note now also folds in the 2026-05-07 official DRA follow-up.
+- [Kubernetes v1.36 DRA 的整体设计：从请求入口到调度、状态与拓扑](../blog/2026-04-23/2026-04-23-kubernetes-v1.36-dra-ai-infra_zh.md) -
+  This note now also folds in the 2026-05-07 official DRA follow-up.
 
 ## v1.36 Feature Snapshot for AI Infra
 
@@ -159,6 +159,63 @@ features that open the next wave of platform design.
 - **Discoverable device metadata in containers**: standardizes how drivers
   surface attributes like PCI addresses and network configuration into
   containers without extra API calls.
+
+## v1.37 Feature Snapshot for AI Infra
+
+Kubernetes v1.37 shifts the DRA discussion from "can a claim allocate a GPU?"
+to migration, fault isolation, device preparation, sharing, and workload-level
+lifecycle management.
+
+### Stable migration and operations path
+
+- **Extended Resources via DRA (GA, KEP-5004)**: existing
+  `vendor.com/device: N` workloads can keep their Pod spec while a DeviceClass
+  routes allocation to a DRA driver. A cluster may migrate node pools
+  gradually, but the same resource name cannot be backed by Device Plugin and
+  DRA on the same node.
+- **Device Taints and Tolerations (GA, KEP-5055)**: isolate an unhealthy or
+  maintenance-bound device without removing the entire node from service.
+- **ResourceClaim Device Status (GA, KEP-4817)**: drivers publish allocation
+  status and standardized network data into the claim.
+- **Standard `resource.kubernetes.io/numaNode` attribute (Stable, KEP-6072)**:
+  gives independent GPU, NIC, and accelerator drivers a common NUMA topology
+  vocabulary.
+
+### Beta allocation chain
+
+- **ResourceClaim support for workloads (KEP-5729)**: one PodGroup can own and
+  share a generated claim, avoiding per-Pod claim duplication and the
+  `reservedFor` cardinality limit.
+- **Consumable Capacity (KEP-5075)** and **Partitionable Devices (KEP-4815)**:
+  cover capacity sharing and logical partitions for GPUs, NICs, and other
+  structured devices.
+- **Device Binding Conditions (KEP-5007)**: delays Pod binding until an
+  external device is ready and permits rescheduling after failure or timeout.
+- **Device Attributes Downward API (KEP-5304)**: carries driver-generated
+  metadata such as PCI addresses or MACs into containers through CDI metadata.
+
+The v1.37 release materials are not fully consistent yet for **Resource Health
+Status (KEP-4680)**: the release branch still marks it Beta and enabled by
+default, while a release announcement draft listed it as Stable. Verify the
+final v1.37 CHANGELOG and feature-gate definitions before documenting it as GA.
+
+### DRA + Workload-Aware Scheduling
+
+The important v1.37 integration point is not merely that Pods can consume DRA;
+it is that the PodGroup lifecycle can own a shared claim. This lets a gang of
+training workers or a disaggregated inference group reserve a topology unit,
+RDMA interface, partition, or shared capacity once and release it with the
+group.
+
+The two main gates remain opt-in in v1.37:
+
+- `GenericWorkload` (Beta, default off) enables the Workload/PodGroup core,
+  gang scheduling, and workload-aware preemption.
+- `DRAWorkloadResourceClaims` (Beta, default off) enables PodGroup-level shared
+  ResourceClaims across API server, controller manager, scheduler, and kubelet.
+
+See [Kubernetes v1.37 DRA and WAS release notes](./sig-release/v1.37/release.md)
+for the complete gate matrix, upgrade risks, and recommended rollout order.
 
 ## Topology Management with DRA
 

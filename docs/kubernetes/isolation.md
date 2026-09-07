@@ -1,7 +1,7 @@
 ---
 status: Active
 maintainer: pacoxu
-last_updated: 2026-07-10
+last_updated: 2026-08-25
 tags: kubernetes, isolation, security, multi-tenancy
 canonical_path: docs/kubernetes/isolation.md
 ---
@@ -494,7 +494,7 @@ Different technologies offer distinct tradeoffs for agent sandboxing:
 | WASM (monty) | 0.06ms | Sandboxed | Limited subset | Custom |
 | Unikernel (Unikraft) | <100ms | Very strong | Improving | Custom |
 
-### Layered Agent Sandbox Selection (2026-04-22)
+### Layered Agent Sandbox Selection (2026-08-25)
 
 Agent sandbox projects now span several layers. For Kubernetes production
 designs, the most important decision is where each project sits in the stack:
@@ -502,6 +502,7 @@ designs, the most important decision is where each project sits in the stack:
 | Layer | Projects | Fit for Kubernetes Isolation |
 | ----- | -------- | ---------------------------- |
 | Kubernetes lifecycle API | [kubernetes-sigs/agent-sandbox](https://github.com/kubernetes-sigs/agent-sandbox), [agent-sandbox/agent-sandbox](https://github.com/agent-sandbox/agent-sandbox), [volcano-sh/agentcube](https://github.com/volcano-sh/agentcube) | Use for `Sandbox` CRDs, warm pools, stable identity, and scheduler integration. This layer still needs a runtime boundary underneath. |
+| Integrated Kubernetes sandbox distribution | [K8E](https://github.com/xiaods/k8e) | Use when a single-binary, self-hosted cluster that bundles a sandbox gateway, warm pools, Cilium policy, and gVisor/Kata/Firecracker integration is preferable to assembling the layers separately. It spans multiple layers and still relies on the selected runtime as the actual isolation boundary. |
 | Agent runtime substrate | [agent-substrate/substrate](https://github.com/agent-substrate/substrate) | Use when the problem is not only isolation, but running large fleets of mostly idle agents through invocation-based wake-up, suspension/resume, and shared worker pools. |
 | Agent sandbox platform | [OpenSandbox](https://github.com/alibaba/OpenSandbox), [CubeSandbox](https://github.com/TencentCloud/CubeSandbox), [E2B](https://github.com/e2b-dev/e2b), [Daytona](https://github.com/daytonaio/daytona), [Sandbox0](https://github.com/sandbox0-ai/sandbox0) | Use for SDK/API, templates, command/file/browser execution, and self-hosted service operations. Validate licensing and deployment model before embedding. |
 | Runtime boundary | [gVisor](https://github.com/google/gvisor), [Kata Containers](https://github.com/kata-containers/kata-containers), [containerd/nerdbox](https://github.com/containerd/nerdbox), [Firecracker](https://github.com/firecracker-microvm/firecracker), [Kuasar](https://github.com/kuasar-io/kuasar) | Use as the actual isolation boundary: gVisor for density, Kata for VM-level isolation, Firecracker for custom microVM control planes, Kuasar for multi-sandbox containerd integration. |
@@ -511,7 +512,9 @@ Recommended Kubernetes shape:
 
 1. Run agent APIs, auth, billing, policy, and observability as regular Pods.
 2. Allocate execution sandboxes through a `Sandbox` CRD or an equivalent
-   platform API.
+   platform API. For a dedicated integrated cluster, evaluate K8E as a
+   distribution that supplies this API surface together with warm pools,
+   networking, and runtime integration.
 3. Select `RuntimeClass` by risk: `runsc`/gVisor for dense CPU-only tasks,
    Kata for high-risk or GPU-capable tenants, and dedicated VM/microVM pools
    for compliance-heavy workloads.

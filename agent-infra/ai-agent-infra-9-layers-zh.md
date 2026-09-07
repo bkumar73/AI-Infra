@@ -1,7 +1,7 @@
 ---
 status: Active
 maintainer: pacoxu
-last_updated: 2026-07-09
+last_updated: 2026-08-25
 tags: ai-agents, agent-infra, llmops, observability, sandbox, memory, governance
 canonical_path: agent-infra/ai-agent-infra-9-layers-zh.md
 ---
@@ -236,6 +236,7 @@ Agent Framework 和 Workflow Engine 要分清：
 | -- | ------ | ---- |
 | Agent-facing API | SDK、文件、命令、浏览器、模板 | OpenSandbox、E2B、CubeSandbox |
 | Kubernetes 生命周期 | CRD、Warm Pool、SandboxClaim、调度 | kubernetes-sigs/agent-sandbox |
+| 一体化 Kubernetes 沙箱发行版 | 集群、Gateway、Warm Pool、网络策略与 Runtime 集成 | K8E |
 | Runtime Boundary | 隔离强度、密度、启动速度、GPU 支持 | runc、gVisor、Kata、Firecracker |
 | 本地开发沙箱 | 仓库访问、凭据代理、出网控制、Diff Review | Cleanroom、Brood Box、microsandbox |
 
@@ -456,7 +457,7 @@ Agent 的成本来自整条链路：
 | L2 | 托管向量库或自建 Qdrant / Milvus |
 | L3 | Prompt Registry 和版本管理 |
 | L4 | LangGraph、CrewAI、AutoGen 或同类框架 |
-| L5 | E2B / OpenSandbox / Kubernetes Sandbox |
+| L5 | E2B / OpenSandbox / K8E / Kubernetes Sandbox |
 | L6 | Checkpoint、Redis、基础长期记忆 |
 | L7 | Golden Set、RAGAS / DeepEval 等评测 |
 | L8 | Langfuse、LangSmith、OpenTelemetry |
